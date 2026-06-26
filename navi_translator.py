@@ -23,7 +23,7 @@ def _get_api_key() -> str:
     os.environ["ANTHROPIC_API_KEY"] = key  # available to the anthropic client
     return key
 
-PORT = 7777
+PORT = int(os.environ.get("PORT", 7777))
 
 SYSTEM_PROMPT = """\
 You are an expert Na'vi language translator. Na'vi is the constructed language \
@@ -462,13 +462,16 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main():
-    import socket
-    local_ip = socket.gethostbyname(socket.gethostname())
     server = HTTPServer(("0.0.0.0", PORT), Handler)
-    print(f"Na'vi Translator running at http://127.0.0.1:{PORT}")
-    print(f"On your network:           http://{local_ip}:{PORT}")
+    print(f"Na'vi Translator running on port {PORT}")
+    is_local = not os.environ.get("PORT")
+    if is_local:
+        import socket
+        local_ip = socket.gethostbyname(socket.gethostname())
+        print(f"Local:      http://127.0.0.1:{PORT}")
+        print(f"Network:    http://{local_ip}:{PORT}")
+        threading.Timer(0.4, lambda: webbrowser.open(f"http://127.0.0.1:{PORT}")).start()
     print("Press Ctrl-C to quit.")
-    threading.Timer(0.4, lambda: webbrowser.open(f"http://127.0.0.1:{PORT}")).start()
     try:
         server.serve_forever()
     except KeyboardInterrupt:
